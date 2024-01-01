@@ -6,30 +6,35 @@ import {
   ImageBackground,
   Dimensions,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
 import colors from '../styles/Colors';
-import {Movie} from '../interfaces/MovieInterface';
+import { Movie } from '../interfaces/MovieInterface';
+import { MovieScreenProps } from '../interfaces/MovieScreenProps';
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-interface MovieScreenProps {
-  movieData: Movie[];
-  year: number;
-}
-const MovieScreen: React.FC<MovieScreenProps> = ({movieData, year}) => {
+const MovieScreen: React.FC<MovieScreenProps> = ({ movieData, year }) => {
+  const baseUrl = 'https://image.tmdb.org/t/p/w500';
+  // console.log("inside movie screen",year, movieData)
   const renderMovieItems = () => {
-    return movieData.map((item, index) => (
-      <ImageBackground
-        key={index}
-        style={styles.movieItem}
-        source={{uri: colors.image}}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.movieTitle}>{item.title}</Text>
-          <Text style={styles.movieRating}>{item.year}</Text>
+    return movieData.map((item, index) => {
+      const imageUrl = `${baseUrl}${item.poster_path}`;
+
+      return (
+        <View key={index} style={styles.movieItemContainer}>
+          <ImageBackground
+            style={styles.movieItem}
+            source={{ uri: imageUrl }}
+            resizeMode="cover"
+          >
+            <View style={styles.titleContainer}>
+              <Text style={styles.movieTitle}>{item.title}</Text>
+              <Text style={styles.movieRating}>{item.vote_average}</Text>
+            </View>
+          </ImageBackground>
         </View>
-      </ImageBackground>
-    ));
+      );
+    });
   };
 
   return (
@@ -42,7 +47,6 @@ const MovieScreen: React.FC<MovieScreenProps> = ({movieData, year}) => {
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    flex: 1,
     flexGrow: 1,
     backgroundColor: 'black',
   },
@@ -54,44 +58,37 @@ const styles = StyleSheet.create({
     color: '#fff',
     paddingLeft: 16,
   },
-  backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover', // or 'stretch'
-  },
   movieGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     padding: 16,
   },
-  movieItem: {
-    width: width / 2 - 20, // Adjust as needed based on your design
-    height: height / 3, // Adjust as needed based on your design
+  movieItemContainer: {
+    width: width / 2 - 20,
+    height: height / 3,
     marginVertical: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  movieItem: {
+    flex: 1,
     padding: 16,
+    justifyContent: 'flex-end',
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)', // Adjust the opacity as needed
   },
   titleContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    padding: 10,
+    paddingBottom: 10,
   },
-
   movieTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'white', // Set the text color to white
+    color: 'white',
   },
-
   movieRating: {
     marginTop: 8,
-    color: 'white', // Set the text color to white
+    color: 'white',
   },
 });
 

@@ -1,4 +1,5 @@
 export interface Movie {
   title: string;
-  year: string;
+  vote_average: string;
+  poster_path: string
 }

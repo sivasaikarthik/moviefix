@@ -1,42 +1,109 @@
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  FlatList
+} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
-import React from 'react';
 import StatusBar from './components/StatusBar';
-import MovieListScreen from './components/MovieListScreen';
-import {Movie} from './interfaces/MovieInterface';
+import MovieListScreen from './components/MovieListScreen'; // Make sure to import MovieListScreen
+import {discoverMovies} from './services/MovieService';
+
+
+
+import {MovieScreenProps} from './interfaces/MovieScreenProps';
 
 const MovieFix = () => {
-  const movieData: Movie[] = [
-    {title: 'Movie 1', year: '2022'},
-    {title: 'Movie 2', year: '2021'},
-    {title: 'Movie 3', year: '2020'},
-    {title: 'Movie 4', year: '2019'},
-    {title: 'Movie 5', year: '2018'},
-    {title: 'Movie 6', year: '2017'},
-    {title: 'Movie 7', year: '2016'},
-    {title: 'Movie 8', year: '2015'},
-    {title: 'Movie 9', year: '2014'},
-    {title: 'Movie 10', year: '2013'},
-    {title: 'Movie 11', year: '2012'},
-    {title: 'Movie 12', year: '2011'},
-    {title: 'Movie 13', year: '2010'},
-    {title: 'Movie 14', year: '2009'},
-    {title: 'Movie 15', year: '2008'},
-    // Add more movies as needed
-  ];
+  const initialYear = 2012;
+  const [scrollDirection, setScrollDirection] = useState<string>('');
+  const [yearMoviesData, setYearMoviesData] = useState<MovieScreenProps[]>([]);
+  const [previouYear, setPreviousYear] = useState(initialYear);
+  const [nextYear, setNextYear] = useState(initialYear);
 
-  const years = [2010, 2011, 2012, 2013, 2014];
+  const [loading, setLoading] = useState(false);
 
-  const renderMoviewScreens = () => {
-    return years.map((item, index) => ( <MovieListScreen key={index} movieData={movieData} year={item} />
-    ));
+  const fetchMovies = async (direction: 'left' | 'right', year: number) => {
+    try {
+      setLoading(true);
+      const response = await discoverMovies(year, 1);
+      const yearMovie: MovieScreenProps = {
+        year: year,
+        movieData: response.data.results,
+      };
+      setYearMoviesData(prevData =>
+        direction === 'left'
+          ? [yearMovie, ...prevData]
+          : [...prevData, yearMovie],
+      );
+    } catch (error) {
+      console.error('Error fetching movies:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchMovies('left', initialYear)
+    loadMoreRecentMovies()
+    loadMoreOlderMovies()
+  }, []);
+
+  const loadMoreOlderMovies = async () => {
+    if (!loading) {
+      await fetchMovies('left', previouYear - 1);
+      setPreviousYear(previouYear - 1);
+    }
+  };
+
+  const loadMoreRecentMovies = async () => {
+    console.log('recent');
+    if (!loading) {
+      await fetchMovies('right', nextYear + 1);
+      setNextYear(nextYear + 1);
+      console.log(nextYear)
+    }
+  };
+
+
+  const handleScroll = (event: any) => {
+    const currentScrollPos: number = event.nativeEvent.contentOffset.y;
+    const windowHeight: number = event.nativeEvent.layoutMeasurement.height;
+    const documentHeight: number = event.nativeEvent.contentSize.height;
+    const scrollPercentage: number = (currentScrollPos / (documentHeight - windowHeight)) * 100;
+
+    console.log("insi")
+    if (currentScrollPos > 0 && currentScrollPos < windowHeight) {
+      setScrollDirection(currentScrollPos > windowHeight / 2 ? 'up' : 'down');
+    }
+
+    if (scrollPercentage > 50 ) {
+      console.log("UPPPP")
+      loadMoreRecentMovies();
+    }
+
+    if (scrollPercentage < 50 ) {
+      console.log("Down")
+      loadMoreOlderMovies();
+    }
+  };
+
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <View>
           <StatusBar />
-          <ScrollView>{renderMoviewScreens()}</ScrollView>
+         
+            <FlatList
+              data={yearMoviesData}
+              renderItem={({item}) => (
+                <MovieListScreen year={item.year} movieData={item.movieData} />
+              )}
+              keyExtractor={(item, index) => index.toString()}
+              onEndReachedThreshold={100}
+              onScroll={handleScroll}
+            />
+          
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -46,9 +113,12 @@ const MovieFix = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingBottom: 100,
   },
-  staus: {
+ 
+  status: {
     backgroundColor: '#1a1918',
   },
 });
+
 export default MovieFix;
