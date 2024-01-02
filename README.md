@@ -20,3 +20,16 @@ npm start
 # OR using Yarn
 yarn start
 ```
+
+## Features
+# UI Requirements :
+- Generic buttons,
+- status bar,
+- Movie card layout,
+- Dynamic button,
+# Funtional Requirements:
+- Infinter scroll
+
+## Still in progress features
+- Filter based on generic
+-  improvsing caching mechanism
