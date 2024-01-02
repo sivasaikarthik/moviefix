@@ -1,15 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  StyleSheet,
-  FlatList
-} from 'react-native';
+import {View, StyleSheet, FlatList, ActivityIndicator} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import StatusBar from './components/StatusBar';
 import MovieListScreen from './components/MovieListScreen'; // Make sure to import MovieListScreen
 import {discoverMovies} from './services/MovieService';
-
-
 
 import {MovieScreenProps} from './interfaces/MovieScreenProps';
 
@@ -43,9 +37,9 @@ const MovieFix = () => {
   };
 
   useEffect(() => {
-    fetchMovies('left', initialYear)
-    loadMoreRecentMovies()
-    loadMoreOlderMovies()
+    fetchMovies('left', initialYear);
+    // loadMoreRecentMovies()
+    // loadMoreOlderMovies()
   }, []);
 
   const loadMoreOlderMovies = async () => {
@@ -56,54 +50,59 @@ const MovieFix = () => {
   };
 
   const loadMoreRecentMovies = async () => {
-    console.log('recent');
     if (!loading) {
       await fetchMovies('right', nextYear + 1);
       setNextYear(nextYear + 1);
-      console.log(nextYear)
     }
   };
-
 
   const handleScroll = (event: any) => {
     const currentScrollPos: number = event.nativeEvent.contentOffset.y;
     const windowHeight: number = event.nativeEvent.layoutMeasurement.height;
     const documentHeight: number = event.nativeEvent.contentSize.height;
-    const scrollPercentage: number = (currentScrollPos / (documentHeight - windowHeight)) * 100;
+    const scrollPercentage: number =
+      (currentScrollPos / (documentHeight - windowHeight)) * 100;
 
-    console.log("insi")
     if (currentScrollPos > 0 && currentScrollPos < windowHeight) {
       setScrollDirection(currentScrollPos > windowHeight / 2 ? 'up' : 'down');
     }
 
-    if (scrollPercentage > 50 ) {
-      console.log("UPPPP")
+    if (scrollPercentage > 80) {
+      console.log('UPPPP');
       loadMoreRecentMovies();
     }
 
-    if (scrollPercentage < 50 ) {
-      console.log("Down")
+    if (scrollPercentage < 20) {
+      console.log('Down');
       loadMoreOlderMovies();
     }
   };
 
+  const renderFooter = () => {
+    // Render loading indicator while data is being fetched
+    return loading ? (
+      <View style={{paddingVertical: 20}}>
+        <ActivityIndicator animating size="large" />
+      </View>
+    ) : null;
+  };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <View>
           <StatusBar />
-         
-            <FlatList
-              data={yearMoviesData}
-              renderItem={({item}) => (
-                <MovieListScreen year={item.year} movieData={item.movieData} />
-              )}
-              keyExtractor={(item, index) => index.toString()}
-              onEndReachedThreshold={100}
-              onScroll={handleScroll}
-            />
-          
+
+          <FlatList
+            data={yearMoviesData}
+            renderItem={({item}) => (
+              <MovieListScreen year={item.year} movieData={item.movieData} />
+            )}
+            keyExtractor={(item, index) => index.toString()}
+            onEndReachedThreshold={100}
+            onScroll={handleScroll}
+            scrollEventThrottle={20}
+          />
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -115,7 +114,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 100,
   },
- 
+
   status: {
     backgroundColor: '#1a1918',
   },
